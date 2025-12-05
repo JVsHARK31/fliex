@@ -125,10 +125,11 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
             <iframe
               src={embedUrl}
               title={title}
-              className="w-full h-full"
+              className="w-full h-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
-              sandbox="allow-same-origin allow-scripts allow-presentation"
+              referrerPolicy="origin"
+              loading="lazy"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center p-6">
