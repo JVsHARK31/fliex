@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FiX, FiExternalLink, FiYoutube, FiPlay, FiAlertCircle } from 'react-icons/fi';
-import { getLK21StreamingUrl } from '@/lib/lk21-api';
+import ServerSelector from './ServerSelector';
 
 interface VideoPlayerProps {
   title: string;
@@ -17,23 +17,15 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
   const [isLoadingStream, setIsLoadingStream] = useState(true);
 
   useEffect(() => {
-    async function loadStream() {
-      if (movieId) {
-        try {
-          setIsLoadingStream(true);
-          const url = await getLK21StreamingUrl(movieId);
-          setStreamUrl(url);
-        } catch (error) {
-          console.error('Error loading stream:', error);
-          setStreamUrl(null);
-        } finally {
-          setIsLoadingStream(false);
-        }
-      } else {
-        setIsLoadingStream(false);
-      }
+    // Langsung gunakan VidSrc embed URL (pasti work!)
+    if (movieId) {
+      // VidSrc support IMDB ID format (tt1234567)
+      const embedUrl = `https://vidsrc.xyz/embed/movie/${movieId}`;
+      setStreamUrl(embedUrl);
+      setIsLoadingStream(false);
+    } else {
+      setIsLoadingStream(false);
     }
-    loadStream();
   }, [movieId]);
 
   // Generate YouTube search URL untuk trailer
@@ -66,6 +58,17 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
             <FiX size={24} />
           </button>
         </div>
+
+        {/* Server Selector - Always visible in Stream tab */}
+        {selectedOption === 'stream' && movieId && (
+          <div className="px-6 pt-4 pb-2 border-b border-gray-800 flex items-center justify-between">
+            <p className="text-gray-400 text-sm">Pilih server jika video tidak muncul:</p>
+            <ServerSelector 
+              movieId={movieId} 
+              onSelectServer={(url) => setStreamUrl(url)}
+            />
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6 sm:p-8 max-h-[70vh] overflow-y-auto">
