@@ -93,7 +93,7 @@ export default function SearchPage() {
           <div className="text-center py-12 sm:py-16 md:py-20">
             <div className="text-6xl mb-4">🔍</div>
             <p className="text-gray-400 text-lg sm:text-xl mb-3 sm:mb-4">
-              Tidak ada hasil untuk "{debouncedQuery}"
+              Tidak ada hasil untuk &ldquo;{debouncedQuery}&rdquo;
             </p>
             <p className="text-gray-500 text-sm sm:text-base mb-4">
               Coba kata kunci lain atau cari berdasarkan genre
