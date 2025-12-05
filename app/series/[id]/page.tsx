@@ -28,10 +28,15 @@ export async function generateMetadata({ params }: SeriesDetailPageProps) {
 }
 
 export default async function SeriesDetailPage({ params }: SeriesDetailPageProps) {
-  const [show, relatedSeries] = await Promise.all([
-    getDetails(params.id),
-    getTrending('series'),
-  ]);
+  let show = await getDetails(params.id);
+  
+  // Fallback: Cari di mock data jika getDetails gagal
+  if (!show) {
+    const { mockSeries } = await import('@/lib/mockData');
+    show = mockSeries.find(s => s.id === params.id) || null;
+  }
+  
+  const relatedSeries = await getTrending('series');
 
   if (!show) {
     notFound();

@@ -162,6 +162,143 @@ export const mockMovies: Show[] = [
   },
 ];
 
+// Tambah lebih banyak movies untuk variety
+export const additionalMovies: Show[] = [
+  {
+    id: 'tt0137523',
+    title: 'Fight Club',
+    overview: 'An insomniac office worker and a devil-may-care soap maker form an underground fight club.',
+    releaseYear: 1999,
+    originalTitle: 'Fight Club',
+    genres: [{ id: 'drama', name: 'Drama' }],
+    rating: 8.8,
+    imageSet: {
+      verticalPoster: {
+        w240: 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
+        w360: 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
+        w480: 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
+        w600: 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
+        w720: 'https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
+      },
+      horizontalPoster: {
+        w360: 'https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',
+        w480: 'https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',
+        w720: 'https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',
+        w1080: 'https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',
+        w1440: 'https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',
+      },
+    },
+    showType: 'movie',
+  },
+  {
+    id: 'tt0120737',
+    title: 'The Lord of the Rings: The Fellowship of the Ring',
+    overview: 'A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring.',
+    releaseYear: 2001,
+    originalTitle: 'The Lord of the Rings: The Fellowship of the Ring',
+    genres: [{ id: 'fantasy', name: 'Fantasy' }, { id: 'adventure', name: 'Adventure' }],
+    rating: 8.8,
+    imageSet: {
+      verticalPoster: {
+        w240: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg',
+        w360: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg',
+        w480: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg',
+        w600: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg',
+        w720: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg',
+      },
+      horizontalPoster: {
+        w360: 'https://image.tmdb.org/t/p/w1280/x2RS3uTcsJJ9IfjNPcgDmukoEcQ.jpg',
+        w480: 'https://image.tmdb.org/t/p/w1280/x2RS3uTcsJJ9IfjNPcgDmukoEcQ.jpg',
+        w720: 'https://image.tmdb.org/t/p/w1280/x2RS3uTcsJJ9IfjNPcgDmukoEcQ.jpg',
+        w1080: 'https://image.tmdb.org/t/p/w1280/x2RS3uTcsJJ9IfjNPcgDmukoEcQ.jpg',
+        w1440: 'https://image.tmdb.org/t/p/w1280/x2RS3uTcsJJ9IfjNPcgDmukoEcQ.jpg',
+      },
+    },
+    showType: 'movie',
+  },
+  {
+    id: 'tt0133093',
+    title: 'The Matrix',
+    overview: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',
+    releaseYear: 1999,
+    originalTitle: 'The Matrix',
+    genres: [{ id: 'scifi', name: 'Science Fiction' }, { id: 'action', name: 'Action' }],
+    rating: 8.7,
+    imageSet: {
+      verticalPoster: {
+        w240: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+        w360: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+        w480: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+        w600: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+        w720: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+      },
+      horizontalPoster: {
+        w360: 'https://image.tmdb.org/t/p/w1280/icmmSD4vTTDKOq2vvdulafOGw93.jpg',
+        w480: 'https://image.tmdb.org/t/p/w1280/icmmSD4vTTDKOq2vvdulafOGw93.jpg',
+        w720: 'https://image.tmdb.org/t/p/w1280/icmmSD4vTTDKOq2vvdulafOGw93.jpg',
+        w1080: 'https://image.tmdb.org/t/p/w1280/icmmSD4vTTDKOq2vvdulafOGw93.jpg',
+        w1440: 'https://image.tmdb.org/t/p/w1280/icmmSD4vTTDKOq2vvdulafOGw93.jpg',
+      },
+    },
+    showType: 'movie',
+  },
+  {
+    id: 'tt0110912',
+    title: 'Pulp Fiction',
+    overview: 'The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption.',
+    releaseYear: 1994,
+    originalTitle: 'Pulp Fiction',
+    genres: [{ id: 'crime', name: 'Crime' }, { id: 'thriller', name: 'Thriller' }],
+    rating: 8.9,
+    imageSet: {
+      verticalPoster: {
+        w240: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
+        w360: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
+        w480: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
+        w600: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
+        w720: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
+      },
+      horizontalPoster: {
+        w360: 'https://image.tmdb.org/t/p/w1280/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
+        w480: 'https://image.tmdb.org/t/p/w1280/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
+        w720: 'https://image.tmdb.org/t/p/w1280/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
+        w1080: 'https://image.tmdb.org/t/p/w1280/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
+        w1440: 'https://image.tmdb.org/t/p/w1280/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
+      },
+    },
+    showType: 'movie',
+  },
+  {
+    id: 'tt0167260',
+    title: 'The Lord of the Rings: The Return of the King',
+    overview: 'Gandalf and Aragorn lead the World of Men against Sauron\'s army to draw his gaze from Frodo and Sam.',
+    releaseYear: 2003,
+    originalTitle: 'The Lord of the Rings: The Return of the King',
+    genres: [{ id: 'fantasy', name: 'Fantasy' }, { id: 'adventure', name: 'Adventure' }],
+    rating: 8.9,
+    imageSet: {
+      verticalPoster: {
+        w240: 'https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg',
+        w360: 'https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg',
+        w480: 'https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg',
+        w600: 'https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg',
+        w720: 'https://image.tmdb.org/t/p/w500/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg',
+      },
+      horizontalPoster: {
+        w360: 'https://image.tmdb.org/t/p/w1280/j6NCjU6Zh7SkfIeN5zDaoTmBn4m.jpg',
+        w480: 'https://image.tmdb.org/t/p/w1280/j6NCjU6Zh7SkfIeN5zDaoTmBn4m.jpg',
+        w720: 'https://image.tmdb.org/t/p/w1280/j6NCjU6Zh7SkfIeN5zDaoTmBn4m.jpg',
+        w1080: 'https://image.tmdb.org/t/p/w1280/j6NCjU6Zh7SkfIeN5zDaoTmBn4m.jpg',
+        w1440: 'https://image.tmdb.org/t/p/w1280/j6NCjU6Zh7SkfIeN5zDaoTmBn4m.jpg',
+      },
+    },
+    showType: 'movie',
+  },
+];
+
+// Combine all movies
+mockMovies.push(...additionalMovies);
+
 export const mockSeries: Show[] = [
   {
     id: 'tt0903747',
@@ -246,6 +383,35 @@ export const mockSeries: Show[] = [
         w720: 'https://image.tmdb.org/t/p/w1280/qWnJzyZhyy74gjpSjIXWmuk0ifX.jpg',
         w1080: 'https://image.tmdb.org/t/p/w1280/qWnJzyZhyy74gjpSjIXWmuk0ifX.jpg',
         w1440: 'https://image.tmdb.org/t/p/w1280/qWnJzyZhyy74gjpSjIXWmuk0ifX.jpg',
+      },
+    },
+    showType: 'series',
+  },
+  {
+    id: 'tt0475784',
+    title: 'Westworld',
+    overview: 'Set at the intersection of the near future and the reimagined past, explore a world in which every human appetite can be indulged.',
+    firstAirYear: 2016,
+    lastAirYear: 2022,
+    originalTitle: 'Westworld',
+    genres: [{ id: 'scifi', name: 'Science Fiction' }, { id: 'western', name: 'Western' }],
+    rating: 8.5,
+    seasonCount: 4,
+    episodeCount: 36,
+    imageSet: {
+      verticalPoster: {
+        w240: 'https://image.tmdb.org/t/p/w500/y5XSHlIqHHNjKe4lXvjuGPY2vLx.jpg',
+        w360: 'https://image.tmdb.org/t/p/w500/y5XSHlIqHHNjKe4lXvjuGPY2vLx.jpg',
+        w480: 'https://image.tmdb.org/t/p/w500/y5XSHlIqHHNjKe4lXvjuGPY2vLx.jpg',
+        w600: 'https://image.tmdb.org/t/p/w500/y5XSHlIqHHNjKe4lXvjuGPY2vLx.jpg',
+        w720: 'https://image.tmdb.org/t/p/w500/y5XSHlIqHHNjKe4lXvjuGPY2vLx.jpg',
+      },
+      horizontalPoster: {
+        w360: 'https://image.tmdb.org/t/p/w1280/6aj04nzf4M0NHr3mZGaUFy6MU3r.jpg',
+        w480: 'https://image.tmdb.org/t/p/w1280/6aj04nzf4M0NHr3mZGaUFy6MU3r.jpg',
+        w720: 'https://image.tmdb.org/t/p/w1280/6aj04nzf4M0NHr3mZGaUFy6MU3r.jpg',
+        w1080: 'https://image.tmdb.org/t/p/w1280/6aj04nzf4M0NHr3mZGaUFy6MU3r.jpg',
+        w1440: 'https://image.tmdb.org/t/p/w1280/6aj04nzf4M0NHr3mZGaUFy6MU3r.jpg',
       },
     },
     showType: 'series',

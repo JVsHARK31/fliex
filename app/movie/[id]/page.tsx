@@ -28,10 +28,15 @@ export async function generateMetadata({ params }: MovieDetailPageProps) {
 }
 
 export default async function MovieDetailPage({ params }: MovieDetailPageProps) {
-  const [show, relatedMovies] = await Promise.all([
-    getDetails(params.id),
-    getTrending('movie'),
-  ]);
+  let show = await getDetails(params.id);
+  
+  // Fallback: Cari di mock data jika getDetails gagal
+  if (!show) {
+    const { mockMovies } = await import('@/lib/mockData');
+    show = mockMovies.find(m => m.id === params.id) || null;
+  }
+  
+  const relatedMovies = await getTrending('movie');
 
   if (!show) {
     notFound();
