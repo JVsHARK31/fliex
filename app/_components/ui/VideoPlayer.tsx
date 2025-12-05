@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiX, FiExternalLink, FiYoutube, FiPlay } from 'react-icons/fi';
+import { FiX, FiExternalLink, FiYoutube, FiPlay, FiAlertCircle } from 'react-icons/fi';
 import { getLK21StreamingUrl } from '@/lib/lk21-api';
 
 interface VideoPlayerProps {
@@ -141,7 +141,7 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
                       Stream Tidak Tersedia
                     </h3>
                     <p className="text-gray-400 text-sm mb-4">
-                      Coba tab "Trailer" atau "Platform" untuk opsi lain
+                      Coba tab &ldquo;Trailer&rdquo; atau &ldquo;Platform&rdquo; untuk opsi lain
                     </p>
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
                 <h4 className="text-white font-semibold mb-2">💡 Tips:</h4>
                 <ul className="text-gray-300 text-sm space-y-2">
                   <li>• Gunakan platform resmi untuk kualitas terbaik dan mendukung pembuat film</li>
-                  <li>• Cek tab "Trailer" untuk menonton cuplikan di YouTube</li>
+                  <li>• Cek tab &ldquo;Trailer&rdquo; untuk menonton cuplikan di YouTube</li>
                   <li>• Beberapa platform menawarkan free trial</li>
                 </ul>
               </div>
