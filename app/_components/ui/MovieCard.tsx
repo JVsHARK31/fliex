@@ -30,6 +30,7 @@ export default function MovieCard({ show }: MovieCardProps) {
       {showPlayer && (
         <VideoPlayer
           title={show.title}
+          movieId={show.id}
           onClose={() => setShowPlayer(false)}
         />
       )}

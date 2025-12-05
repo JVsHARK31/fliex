@@ -1,99 +1,200 @@
+import * as cheerio from 'cheerio';
 import axios from 'axios';
-import { Show, ShowDetails, APIResponse, SearchResponse } from './types';
+import { Show, ShowDetails } from './types';
 import { mockMovies, mockSeries } from './mockData';
 
-// Axios instance dengan konfigurasi RapidAPI
-const apiClient = axios.create({
-  baseURL: 'https://streaming-availability.p.rapidapi.com',
+// Base URLs
+const LK21_URL = process.env.LK21_URL || 'https://tv.lk21official.live';
+const ND_URL = process.env.ND_URL || 'https://tv.nontondrama.lol';
+
+// Axios instance with User-Agent to avoid simple blocks
+const client = axios.create({
   headers: {
-    'X-RapidAPI-Key': process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '4e191731b7msh836483830c0fbafp1d45c2jsnc33bea0ab0aa',
-    'X-RapidAPI-Host': process.env.NEXT_PUBLIC_RAPIDAPI_HOST || 'streaming-availability.p.rapidapi.com',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
   },
 });
 
 /**
- * Get trending shows (movies or series)
- * @param type - 'movie' atau 'series'
- * @param country - kode negara (default: 'us')
+ * Helper to map LK21 structure to our Show interface
+ */
+function mapLK21ToShow(element: cheerio.Cheerio<any>, $: cheerio.CheerioAPI, type: 'movie' | 'series' = 'movie'): Show {
+  const link = $(element).find('h2.entry-title a');
+  const rawId = link.attr('href');
+  // Extract slug as ID (remove domain)
+  const id = rawId ? rawId.replace(/\/$/, '').split('/').pop() || '' : '';
+  
+  const title = link.text().trim();
+  const posterUrl = $(element).find('img').attr('src') || '';
+  const ratingText = $(element).find('.gmr-rating-item').text().trim();
+  const yearText = $(element).find('.gmr-movie-on').text().trim(); // Adjust selector based on actual site
+
+  // Use 'https:' prefix if missing
+  const fullPosterUrl = posterUrl.startsWith('//') ? `https:${posterUrl}` : posterUrl;
+
+  return {
+    id,
+    title,
+    overview: '', // List view usually has no overview
+    releaseYear: parseInt(yearText) || new Date().getFullYear(),
+    firstAirYear: parseInt(yearText) || new Date().getFullYear(),
+    originalTitle: title,
+    genres: [], // List view usually has no genres details
+    rating: parseFloat(ratingText) || 0,
+    imageSet: {
+      verticalPoster: {
+        w240: fullPosterUrl,
+        w360: fullPosterUrl,
+        w480: fullPosterUrl,
+        w600: fullPosterUrl,
+        w720: fullPosterUrl,
+      },
+      horizontalPoster: {
+        w360: fullPosterUrl,
+        w480: fullPosterUrl,
+        w720: fullPosterUrl,
+        w1080: fullPosterUrl,
+        w1440: fullPosterUrl,
+      },
+    },
+    showType: type,
+  };
+}
+
+/**
+ * Get trending shows by scraping LK21 homepage
  */
 export async function getTrending(
   type: 'movie' | 'series',
   country: string = 'us'
 ): Promise<Show[]> {
   try {
-    const response = await apiClient.get('/shows/search/filters', {
-      params: {
-        country,
-        show_type: type,
-        order_by: 'popularity_1year',
-        genres_relation: 'and',
-        output_language: 'en',
-        catalogs: 'netflix.subscription,prime.subscription,disney.subscription',
-      },
+    // Use NontonDrama for series, LK21 for movies
+    const url = type === 'series' ? ND_URL : LK21_URL;
+    const { data } = await client.get(url);
+    const $ = cheerio.load(data);
+    const shows: Show[] = [];
+
+    // Standard WP theme selector for movies
+    $('article.item-infinite').each((i, el) => {
+      if (i < 20) {
+        shows.push(mapLK21ToShow($(el), $, type));
+      }
     });
-    return response.data.shows || [];
+
+    if (shows.length === 0) {
+      console.warn('No shows found via scraping, falling back to mock data');
+      return type === 'movie' ? mockMovies : mockSeries;
+    }
+
+    return shows;
   } catch (error) {
-    console.error(`Error fetching trending ${type}:`, error);
-    // Return mock data as fallback
+    console.error(`Error scraping trending ${type}:`, error);
     return type === 'movie' ? mockMovies : mockSeries;
   }
 }
 
 /**
- * Get show details by ID
- * @param id - ID dari show
- */
-export async function getDetails(id: string): Promise<ShowDetails | null> {
-  try {
-    const response = await apiClient.get(`/shows/${id}`, {
-      params: {
-        output_language: 'en',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching details for ${id}:`, error);
-    return null;
-  }
-}
-
-/**
- * Search shows by keyword
- * @param query - kata kunci pencarian
- * @param country - kode negara (default: 'us')
+ * Search shows by keyword using scraping
  */
 export async function searchByKeyword(
   query: string,
   country: string = 'us'
 ): Promise<Show[]> {
-  // Langsung gunakan mock data untuk search yang reliable
-  const allMockData = [...mockMovies, ...mockSeries];
-  const searchTerm = query.toLowerCase().trim();
-  
-  if (!searchTerm) {
-    return [];
-  }
-  
-  const searchResults = allMockData.filter(show => {
-    const titleMatch = show.title.toLowerCase().includes(searchTerm);
-    const originalTitleMatch = show.originalTitle.toLowerCase().includes(searchTerm);
-    const overviewMatch = show.overview?.toLowerCase().includes(searchTerm);
-    const genreMatch = show.genres?.some(genre => 
-      genre.name.toLowerCase().includes(searchTerm)
-    );
+  try {
+    const url = `${LK21_URL}/?s=${encodeURIComponent(query)}`;
+    const { data } = await client.get(url);
+    const $ = cheerio.load(data);
+    const shows: Show[] = [];
+
+    $('article.item-infinite').each((i, el) => {
+      shows.push(mapLK21ToShow($(el), $));
+    });
+
+    if (shows.length === 0) {
+       // Fallback to mock data search if scraping fails or yields no results
+        const allMockData = [...mockMovies, ...mockSeries];
+        return allMockData.filter(show => 
+          show.title.toLowerCase().includes(query.toLowerCase()) ||
+          show.originalTitle.toLowerCase().includes(query.toLowerCase())
+        );
+    }
+
+    return shows;
+  } catch (error) {
+    console.error(`Error searching for "${query}":`, error);
     
-    return titleMatch || originalTitleMatch || overviewMatch || genreMatch;
-  });
-  
-  console.log(`Search for "${query}" found ${searchResults.length} results`);
-  return searchResults;
+    // Fallback to mock data search
+    const allMockData = [...mockMovies, ...mockSeries];
+    return allMockData.filter(show => 
+      show.title.toLowerCase().includes(query.toLowerCase()) ||
+      show.originalTitle.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+}
+
+/**
+ * Get details by scraping the detail page
+ */
+export async function getDetails(id: string): Promise<ShowDetails | null> {
+  try {
+    // Try fetching from LK21 (assuming ID is the slug)
+    const url = `${LK21_URL}/${id}`; 
+    const { data } = await client.get(url);
+    const $ = cheerio.load(data);
+
+    const title = $('h1.entry-title').text().trim();
+    const posterUrl = $('.gmr-movie-data img').attr('src') || '';
+    const fullPosterUrl = posterUrl.startsWith('//') ? `https:${posterUrl}` : posterUrl;
+    const overview = $('.entry-content p').first().text().trim();
+    const ratingText = $('.gmr-rating-value').text().trim();
+    
+    // Get genres
+    const genres = $('.gmr-movie-genre a').map((i, el) => ({
+      id: $(el).text().toLowerCase(),
+      name: $(el).text()
+    })).get();
+
+    if (!title) return null;
+
+    return {
+      id,
+      title,
+      originalTitle: title,
+      overview,
+      releaseYear: new Date().getFullYear(), // Simplified
+      genres,
+      rating: parseFloat(ratingText) || 0,
+      imageSet: {
+        verticalPoster: {
+          w240: fullPosterUrl,
+          w360: fullPosterUrl,
+          w480: fullPosterUrl,
+          w600: fullPosterUrl,
+          w720: fullPosterUrl,
+        },
+        horizontalPoster: {
+          w360: fullPosterUrl,
+          w480: fullPosterUrl,
+          w720: fullPosterUrl,
+          w1080: fullPosterUrl,
+          w1440: fullPosterUrl,
+        },
+      },
+      showType: 'movie', 
+    };
+
+  } catch (error) {
+    console.error(`Error fetching details for ${id}:`, error);
+    
+    // Fallback to mock data
+    const allMockData = [...mockMovies, ...mockSeries];
+    const mock = allMockData.find(s => s.id === id);
+    return mock ? { ...mock } : null;
+  }
 }
 
 /**
  * Get shows by genre
- * @param genre - ID atau nama genre
- * @param type - 'movie' atau 'series'
- * @param country - kode negara (default: 'us')
  */
 export async function getShowsByGenre(
   genre: string,
@@ -101,49 +202,27 @@ export async function getShowsByGenre(
   country: string = 'us'
 ): Promise<Show[]> {
   try {
-    const response = await apiClient.get('/shows/search/filters', {
-      params: {
-        country,
-        show_type: type,
-        genres: genre,
-        order_by: 'popularity_1year',
-        output_language: 'en',
-      },
+    // URL pattern: https://tv.lk21official.live/genre/action/
+    const url = `${LK21_URL}/genre/${genre.toLowerCase()}`;
+    const { data } = await client.get(url);
+    const $ = cheerio.load(data);
+    const shows: Show[] = [];
+
+    $('article.item-infinite').each((i, el) => {
+      shows.push(mapLK21ToShow($(el), $, type));
     });
-    return response.data.shows || [];
+
+    return shows;
   } catch (error) {
-    console.error(`Error fetching ${type} by genre "${genre}":`, error);
-    return [];
+    console.error(`Error fetching genre ${genre}:`, error);
+    return type === 'movie' ? mockMovies : mockSeries;
   }
 }
 
 /**
- * Get shows by multiple filters
- * @param filters - object dengan berbagai filter
+ * Get shows by filters (mapped to recent/trending)
  */
-export async function getShowsByFilters(filters: {
-  country?: string;
-  showType?: 'movie' | 'series';
-  genres?: string;
-  orderBy?: string;
-  catalogs?: string;
-}): Promise<Show[]> {
-  try {
-    const response = await apiClient.get('/shows/search/filters', {
-      params: {
-        country: filters.country || 'us',
-        show_type: filters.showType,
-        genres: filters.genres,
-        order_by: filters.orderBy || 'popularity_1year',
-        catalogs: filters.catalogs,
-        output_language: 'en',
-      },
-    });
-    return response.data.shows || [];
-  } catch (error) {
-    console.error('Error fetching shows by filters:', error);
-    // Return mock data as fallback
-    return filters.showType === 'series' ? mockSeries : mockMovies;
-  }
+export async function getShowsByFilters(filters: any): Promise<Show[]> {
+  // Reuse getTrending logic for simplicity in this scraping implementation
+  return getTrending(filters.showType || 'movie');
 }
-

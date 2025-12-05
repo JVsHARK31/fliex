@@ -22,6 +22,7 @@ export default function HeroBanner({ show }: HeroBannerProps) {
       {showPlayer && (
         <VideoPlayer
           title={show.title}
+          movieId={show.id}
           onClose={() => setShowPlayer(false)}
         />
       )}
