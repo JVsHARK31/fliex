@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { FiX, FiExternalLink, FiYoutube } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiX, FiExternalLink, FiYoutube, FiPlay } from 'react-icons/fi';
+import { getLK21StreamingUrl } from '@/lib/lk21-api';
 
 interface VideoPlayerProps {
   title: string;
@@ -11,7 +12,29 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ title, movieId, videoUrl, onClose }: VideoPlayerProps) {
-  const [selectedOption, setSelectedOption] = useState<'info' | 'trailer'>('info');
+  const [selectedOption, setSelectedOption] = useState<'stream' | 'trailer' | 'info'>('stream');
+  const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const [isLoadingStream, setIsLoadingStream] = useState(true);
+
+  useEffect(() => {
+    async function loadStream() {
+      if (movieId) {
+        try {
+          setIsLoadingStream(true);
+          const url = await getLK21StreamingUrl(movieId);
+          setStreamUrl(url);
+        } catch (error) {
+          console.error('Error loading stream:', error);
+          setStreamUrl(null);
+        } finally {
+          setIsLoadingStream(false);
+        }
+      } else {
+        setIsLoadingStream(false);
+      }
+    }
+    loadStream();
+  }, [movieId]);
 
   // Generate YouTube search URL untuk trailer
   const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' official trailer')}`;
@@ -47,20 +70,21 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
         {/* Content */}
         <div className="p-6 sm:p-8 max-h-[70vh] overflow-y-auto">
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
             <button
-              onClick={() => setSelectedOption('info')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                selectedOption === 'info'
+              onClick={() => setSelectedOption('stream')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                selectedOption === 'stream'
                   ? 'bg-netflix-red text-white'
                   : 'bg-white/10 text-gray-300 hover:bg-white/20'
               }`}
             >
-              Informasi
+              <FiPlay size={18} />
+              <span>Streaming</span>
             </button>
             <button
               onClick={() => setSelectedOption('trailer')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
                 selectedOption === 'trailer'
                   ? 'bg-netflix-red text-white'
                   : 'bg-white/10 text-gray-300 hover:bg-white/20'
@@ -69,7 +93,61 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
               <FiYoutube size={18} />
               <span>Trailer</span>
             </button>
+            <button
+              onClick={() => setSelectedOption('info')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                selectedOption === 'info'
+                  ? 'bg-netflix-red text-white'
+                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
+              }`}
+            >
+              Platform
+            </button>
           </div>
+
+          {/* Stream Tab */}
+          {selectedOption === 'stream' && (
+            <div className="space-y-4">
+              {isLoadingStream ? (
+                <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-netflix-red mb-4 mx-auto"></div>
+                    <p className="text-white">Memuat player...</p>
+                  </div>
+                </div>
+              ) : streamUrl ? (
+                <>
+                  <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                    <iframe
+                      src={streamUrl}
+                      title={title}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                      allowFullScreen
+                      referrerPolicy="origin"
+                    />
+                  </div>
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                    <p className="text-green-200 text-sm">
+                      ✅ <strong>Streaming aktif!</strong> Jika video tidak muncul, coba refresh atau pilih tab lain.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+                  <div className="text-center p-6">
+                    <FiAlertCircle className="mx-auto mb-4 text-yellow-500" size={48} />
+                    <h3 className="text-white text-lg font-bold mb-2">
+                      Stream Tidak Tersedia
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-4">
+                      Coba tab "Trailer" atau "Platform" untuk opsi lain
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Info Tab */}
           {selectedOption === 'info' && (

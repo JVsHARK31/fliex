@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import axios from 'axios';
 import { Show, ShowDetails } from './types';
 import { mockMovies, mockSeries } from './mockData';
+import { getLK21Movies, searchLK21, getLK21MovieDetail, getLK21ByGenre } from './lk21-api';
 
 // Base URLs
 const LK21_URL = process.env.LK21_URL || 'https://tv.lk21official.live';
@@ -61,162 +62,115 @@ function mapLK21ToShow(element: cheerio.Cheerio<any>, $: cheerio.CheerioAPI, typ
 }
 
 /**
- * Get trending shows by scraping LK21 homepage
+ * Get trending shows - Try LK21 API first, fallback to mock data
  */
 export async function getTrending(
   type: 'movie' | 'series',
   country: string = 'us'
 ): Promise<Show[]> {
-  try {
-    // Use NontonDrama for series, LK21 for movies
-    const url = type === 'series' ? ND_URL : LK21_URL;
-    const { data } = await client.get(url);
-    const $ = cheerio.load(data);
-    const shows: Show[] = [];
-
-    // Standard WP theme selector for movies
-    $('article.item-infinite').each((i, el) => {
-      if (i < 20) {
-        shows.push(mapLK21ToShow($(el), $, type));
+  // Try LK21 API for movies
+  if (type === 'movie') {
+    try {
+      const lk21Movies = await getLK21Movies(1);
+      if (lk21Movies.length > 0) {
+        console.log(`✅ Loaded ${lk21Movies.length} movies from LK21 API`);
+        return lk21Movies;
       }
-    });
-
-    if (shows.length === 0) {
-      console.warn('No shows found via scraping, falling back to mock data');
-      return type === 'movie' ? mockMovies : mockSeries;
+    } catch (error) {
+      console.log('⚠️ LK21 API not available, using mock data');
     }
-
-    return shows;
-  } catch (error) {
-    console.error(`Error scraping trending ${type}:`, error);
-    return type === 'movie' ? mockMovies : mockSeries;
   }
+  
+  // Fallback to mock data
+  console.log(`📦 Using mock data for ${type}`);
+  return type === 'movie' ? mockMovies : mockSeries;
 }
 
 /**
- * Search shows by keyword using scraping
+ * Search shows by keyword - Try LK21 API first
  */
 export async function searchByKeyword(
   query: string,
   country: string = 'us'
 ): Promise<Show[]> {
+  // Try LK21 API search
   try {
-    const url = `${LK21_URL}/?s=${encodeURIComponent(query)}`;
-    const { data } = await client.get(url);
-    const $ = cheerio.load(data);
-    const shows: Show[] = [];
-
-    $('article.item-infinite').each((i, el) => {
-      shows.push(mapLK21ToShow($(el), $));
-    });
-
-    if (shows.length === 0) {
-       // Fallback to mock data search if scraping fails or yields no results
-        const allMockData = [...mockMovies, ...mockSeries];
-        return allMockData.filter(show => 
-          show.title.toLowerCase().includes(query.toLowerCase()) ||
-          show.originalTitle.toLowerCase().includes(query.toLowerCase())
-        );
+    const lk21Results = await searchLK21(query);
+    if (lk21Results.length > 0) {
+      console.log(`✅ Found ${lk21Results.length} results from LK21 API`);
+      return lk21Results;
     }
-
-    return shows;
   } catch (error) {
-    console.error(`Error searching for "${query}":`, error);
-    
-    // Fallback to mock data search
-    const allMockData = [...mockMovies, ...mockSeries];
-    return allMockData.filter(show => 
-      show.title.toLowerCase().includes(query.toLowerCase()) ||
-      show.originalTitle.toLowerCase().includes(query.toLowerCase())
-    );
+    console.log('⚠️ LK21 API search failed, using mock data');
   }
+  
+  // Fallback to mock data search
+  const allMockData = [...mockMovies, ...mockSeries];
+  const results = allMockData.filter(show => 
+    show.title.toLowerCase().includes(query.toLowerCase()) ||
+    show.originalTitle.toLowerCase().includes(query.toLowerCase())
+  );
+  
+  console.log(`📦 Found ${results.length} results from mock data`);
+  return results;
 }
 
 /**
- * Get details by scraping the detail page
+ * Get details - Try LK21 API first, then mock data
  */
 export async function getDetails(id: string): Promise<ShowDetails | null> {
+  // Try LK21 API
   try {
-    // Try fetching from LK21 (assuming ID is the slug)
-    const url = `${LK21_URL}/${id}`; 
-    const { data } = await client.get(url);
-    const $ = cheerio.load(data);
-
-    const title = $('h1.entry-title').text().trim();
-    const posterUrl = $('.gmr-movie-data img').attr('src') || '';
-    const fullPosterUrl = posterUrl.startsWith('//') ? `https:${posterUrl}` : posterUrl;
-    const overview = $('.entry-content p').first().text().trim();
-    const ratingText = $('.gmr-rating-value').text().trim();
-    
-    // Get genres
-    const genres = $('.gmr-movie-genre a').map((i, el) => ({
-      id: $(el).text().toLowerCase(),
-      name: $(el).text()
-    })).get();
-
-    if (!title) return null;
-
-    return {
-      id,
-      title,
-      originalTitle: title,
-      overview,
-      releaseYear: new Date().getFullYear(), // Simplified
-      genres,
-      rating: parseFloat(ratingText) || 0,
-      imageSet: {
-        verticalPoster: {
-          w240: fullPosterUrl,
-          w360: fullPosterUrl,
-          w480: fullPosterUrl,
-          w600: fullPosterUrl,
-          w720: fullPosterUrl,
-        },
-        horizontalPoster: {
-          w360: fullPosterUrl,
-          w480: fullPosterUrl,
-          w720: fullPosterUrl,
-          w1080: fullPosterUrl,
-          w1440: fullPosterUrl,
-        },
-      },
-      showType: 'movie', 
-    };
-
+    const lk21Detail = await getLK21MovieDetail(id);
+    if (lk21Detail) {
+      console.log(`✅ Loaded detail from LK21 API: ${lk21Detail.title}`);
+      return lk21Detail;
+    }
   } catch (error) {
-    console.error(`Error fetching details for ${id}:`, error);
-    
-    // Fallback to mock data
-    const allMockData = [...mockMovies, ...mockSeries];
-    const mock = allMockData.find(s => s.id === id);
-    return mock ? { ...mock } : null;
+    console.log('⚠️ LK21 API detail failed, checking mock data');
   }
+  
+  // Fallback to mock data
+  const allMockData = [...mockMovies, ...mockSeries];
+  const mock = allMockData.find(s => s.id === id);
+  
+  if (mock) {
+    console.log(`📦 Loaded detail from mock data: ${mock.title}`);
+    return { ...mock };
+  }
+  
+  console.log(`❌ Movie ${id} not found`);
+  return null;
 }
 
 /**
- * Get shows by genre
+ * Get shows by genre - Try LK21 API first
  */
 export async function getShowsByGenre(
   genre: string,
   type: 'movie' | 'series' = 'movie',
   country: string = 'us'
 ): Promise<Show[]> {
-  try {
-    // URL pattern: https://tv.lk21official.live/genre/action/
-    const url = `${LK21_URL}/genre/${genre.toLowerCase()}`;
-    const { data } = await client.get(url);
-    const $ = cheerio.load(data);
-    const shows: Show[] = [];
-
-    $('article.item-infinite').each((i, el) => {
-      shows.push(mapLK21ToShow($(el), $, type));
-    });
-
-    return shows;
-  } catch (error) {
-    console.error(`Error fetching genre ${genre}:`, error);
-    return type === 'movie' ? mockMovies : mockSeries;
+  // Try LK21 API for movies
+  if (type === 'movie') {
+    try {
+      const lk21Movies = await getLK21ByGenre(genre, 1);
+      if (lk21Movies.length > 0) {
+        console.log(`✅ Loaded ${lk21Movies.length} ${genre} movies from LK21 API`);
+        return lk21Movies;
+      }
+    } catch (error) {
+      console.log(`⚠️ LK21 API genre failed for ${genre}`);
+    }
   }
+  
+  // Fallback to mock data filtered by genre
+  const allMockData = type === 'movie' ? mockMovies : mockSeries;
+  const filtered = allMockData.filter(show => 
+    show.genres?.some(g => g.id === genre || g.name.toLowerCase() === genre.toLowerCase())
+  );
+  
+  return filtered.length > 0 ? filtered : allMockData;
 }
 
 /**
