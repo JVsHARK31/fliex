@@ -10,37 +10,37 @@ interface VideoPlayerProps {
   onClose: () => void;
 }
 
-// Daftar embed servers yang proven work dengan IMDB ID
+// Daftar embed servers yang proven work
 const EMBED_SERVERS = [
+  {
+    name: 'YouTube Trailer',
+    url: (title: string) => `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(title + ' official trailer')}`,
+    description: 'Trailer Resmi',
+    type: 'youtube' as const,
+  },
   {
     name: 'VidSrc.xyz',
     url: (id: string) => `https://vidsrc.xyz/embed/movie/${id}`,
     description: 'Fast & Reliable',
+    type: 'embed' as const,
   },
   {
     name: 'VidSrc.to',
     url: (id: string) => `https://vidsrc.to/embed/movie/${id}`,
     description: 'HD Quality',
-  },
-  {
-    name: 'VidSrc.me',
-    url: (id: string) => `https://vidsrc.me/embed/movie?imdb=${id}`,
-    description: 'Multi-Source',
-  },
-  {
-    name: 'SuperEmbed',
-    url: (id: string) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
-    description: 'Auto-Select',
+    type: 'embed' as const,
   },
   {
     name: '2Embed',
     url: (id: string) => `https://www.2embed.cc/embed/${id}`,
     description: 'Multiple Servers',
+    type: 'embed' as const,
   },
   {
-    name: 'VidSrc.pro',
-    url: (id: string) => `https://vidsrc.pro/embed/movie/${id}`,
-    description: 'Backup Server',
+    name: 'SuperEmbed',
+    url: (id: string) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    description: 'Auto-Select',
+    type: 'embed' as const,
   },
 ];
 
@@ -50,49 +50,92 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
   const [currentServerIndex, setCurrentServerIndex] = useState(0);
   const [isLoadingStream, setIsLoadingStream] = useState(true);
   const [streamError, setStreamError] = useState<string | null>(null);
-  const [iframeKey, setIframeKey] = useState(0); // Force iframe reload
+  const [iframeKey, setIframeKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize stream URL when movieId changes
+  // Initialize stream URL - Default ke YouTube Trailer karena paling reliable
   useEffect(() => {
-    if (movieId && selectedOption === 'stream') {
-      const server = EMBED_SERVERS[currentServerIndex];
-      const url = server.url(movieId);
-      setStreamUrl(url);
+    if (selectedOption === 'stream') {
       setIsLoadingStream(true);
       setStreamError(null);
-      setIframeKey(prev => prev + 1); // Force iframe reload
+      
+      // Clear previous timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      const server = EMBED_SERVERS[currentServerIndex];
+      
+      // Jika server pertama (YouTube), langsung set URL
+      if (server.type === 'youtube') {
+        const url = server.url(title);
+        setStreamUrl(url);
+        setIframeKey(prev => prev + 1);
+        // YouTube biasanya load cepat, set timeout pendek
+        timeoutRef.current = setTimeout(() => {
+          setIsLoadingStream(false);
+        }, 2000);
+      } else if (movieId) {
+        // Untuk embed servers lain, coba dengan movieId
+        const url = server.url(movieId);
+        setStreamUrl(url);
+        setIframeKey(prev => prev + 1);
+        // Set timeout lebih lama untuk embed servers
+        timeoutRef.current = setTimeout(() => {
+          setIsLoadingStream(false);
+          // Jika masih loading setelah timeout, mungkin server tidak support
+          if (isLoadingStream) {
+            setStreamError('Server tidak merespons. Coba server lain.');
+          }
+        }, 10000);
+      } else {
+        setIsLoadingStream(false);
+        setStreamError('Movie ID tidak tersedia.');
+      }
+    } else if (selectedOption === 'trailer') {
+      // Trailer tab selalu gunakan YouTube
+      const youtubeUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(title + ' official trailer')}`;
+      setStreamUrl(youtubeUrl);
+      setIsLoadingStream(false);
     } else if (videoUrl) {
       setStreamUrl(videoUrl);
       setIsLoadingStream(false);
-    } else {
-      setIsLoadingStream(false);
     }
-  }, [movieId, videoUrl, currentServerIndex, selectedOption]);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [movieId, videoUrl, currentServerIndex, selectedOption, title]);
 
   // Handle iframe load
   const handleIframeLoad = () => {
     setIsLoadingStream(false);
     setStreamError(null);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
   };
 
   // Handle iframe error
   const handleIframeError = () => {
     setIsLoadingStream(false);
     setStreamError('Video tidak dapat dimuat. Coba server lain atau tab Trailer.');
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
   };
 
   // Switch to next server
   const handleNextServer = () => {
-    if (movieId) {
-      const nextIndex = (currentServerIndex + 1) % EMBED_SERVERS.length;
-      setCurrentServerIndex(nextIndex);
-    }
+    const nextIndex = (currentServerIndex + 1) % EMBED_SERVERS.length;
+    setCurrentServerIndex(nextIndex);
   };
 
   // Generate YouTube search URL untuk trailer
   const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' official trailer')}`;
-  const youtubeEmbedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(title + ' official trailer')}`;
   
   // Generate IMDB URL
   const imdbUrl = movieId ? `https://www.imdb.com/title/${movieId}` : null;
@@ -104,6 +147,8 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
     { name: 'Prime Video', url: `https://www.primevideo.com/search?phrase=${encodeURIComponent(title)}`, color: 'bg-cyan-600' },
     { name: 'Apple TV+', url: `https://tv.apple.com/search?term=${encodeURIComponent(title)}`, color: 'bg-gray-700' },
   ];
+
+  const currentServer = EMBED_SERVERS[currentServerIndex];
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
@@ -123,13 +168,14 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
         </div>
 
         {/* Server Selector - Always visible in Stream tab */}
-        {selectedOption === 'stream' && movieId && (
+        {selectedOption === 'stream' && (
           <div className="px-4 sm:px-6 pt-4 pb-3 border-b border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-black/50">
             <div className="flex items-center gap-2">
               <p className="text-gray-400 text-xs sm:text-sm">Server:</p>
               <span className="text-white text-xs sm:text-sm font-medium">
-                {EMBED_SERVERS[currentServerIndex].name}
+                {currentServer.name}
               </span>
+              <span className="text-gray-500 text-xs">({currentServer.description})</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -190,8 +236,10 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
                 <div className="aspect-video bg-black rounded-lg flex items-center justify-center relative">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-netflix-red mb-4 mx-auto"></div>
-                    <p className="text-white text-sm sm:text-base">Memuat player dari {EMBED_SERVERS[currentServerIndex].name}...</p>
-                    <p className="text-gray-400 text-xs mt-2">Tunggu beberapa detik...</p>
+                    <p className="text-white text-sm sm:text-base">Memuat dari {currentServer.name}...</p>
+                    <p className="text-gray-400 text-xs mt-2">
+                      {currentServer.type === 'youtube' ? 'Memuat trailer YouTube...' : 'Tunggu beberapa detik...'}
+                    </p>
                   </div>
                 </div>
               )}
@@ -203,7 +251,7 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
                       key={iframeKey}
                       ref={iframeRef}
                       src={streamUrl}
-                      title={`${title} - Streaming`}
+                      title={`${title} - ${currentServer.name}`}
                       className="w-full h-full border-0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                       allowFullScreen
@@ -224,7 +272,9 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
                   
                   <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
                     <p className="text-green-200 text-xs sm:text-sm">
-                      ✅ <strong>Streaming aktif!</strong> Jika video tidak muncul dalam 10 detik, klik &ldquo;Ganti Server&rdquo; atau coba tab &ldquo;Trailer&rdquo;.
+                      ✅ <strong>Streaming aktif!</strong> {currentServer.type === 'youtube' 
+                        ? 'Menampilkan trailer resmi dari YouTube.' 
+                        : 'Jika video tidak muncul dalam 10 detik, klik &ldquo;Ganti Server&rdquo; atau coba tab &ldquo;Trailer&rdquo;.'}
                     </p>
                   </div>
                 </>
@@ -240,10 +290,13 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
                     </p>
                     <button
                       onClick={handleNextServer}
-                      className="px-4 py-2 bg-netflix-red text-white rounded-lg font-semibold hover:bg-netflix-red/90 transition-all"
+                      className="px-4 py-2 bg-netflix-red text-white rounded-lg font-semibold hover:bg-netflix-red/90 transition-all mb-2"
                     >
                       Coba Server Lain
                     </button>
+                    <p className="text-gray-500 text-xs mt-2">
+                      Server saat ini: {currentServer.name}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -333,7 +386,7 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
 
               <div className="aspect-video bg-black rounded-lg overflow-hidden">
                 <iframe
-                  src={youtubeEmbedUrl}
+                  src={`https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(title + ' official trailer')}`}
                   title={`${title} Trailer`}
                   className="w-full h-full border-0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"

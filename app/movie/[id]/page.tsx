@@ -1,10 +1,11 @@
 import { getDetails, getTrending } from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiPlay, FiPlus, FiCheck } from 'react-icons/fi';
+import { FiPlus, FiCheck } from 'react-icons/fi';
 import ContentRow from '@/app/_components/ui/ContentRow';
 import { DetailPageSkeleton } from '@/app/_components/ui/SkeletonLoader';
 import { notFound } from 'next/navigation';
+import PlayButton from './PlayButton';
 
 interface MovieDetailPageProps {
   params: {
@@ -114,10 +115,7 @@ export default async function MovieDetailPage({ params }: MovieDetailPageProps) 
 
             {/* Action Buttons */}
             <div className="flex gap-3 mb-8">
-              <button className="flex items-center gap-2 bg-white text-black px-8 py-3 rounded-md font-semibold hover:bg-opacity-80 transition-all">
-                <FiPlay size={20} />
-                <span>Putar</span>
-              </button>
+              <PlayButton title={show.title} movieId={show.id} />
               <button className="flex items-center gap-2 bg-netflix-gray text-white px-6 py-3 rounded-md hover:bg-opacity-80 transition-all">
                 <FiPlus size={20} />
               </button>
