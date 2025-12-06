@@ -22,7 +22,14 @@ function extractIMDBId(id: string): string | null {
 }
 
 // Daftar embed servers yang proven work - menggunakan IMDB ID
+// 2Embed sebagai server utama (default)
 const EMBED_SERVERS = [
+  {
+    name: '2Embed',
+    url: (imdbId: string) => `https://www.2embed.cc/embed/${imdbId}`,
+    description: 'Multiple Servers',
+    type: 'embed' as const,
+  },
   {
     name: 'VidSrc.xyz',
     url: (imdbId: string) => `https://vidsrc.xyz/embed/movie/${imdbId}`,
@@ -33,12 +40,6 @@ const EMBED_SERVERS = [
     name: 'VidSrc.to',
     url: (imdbId: string) => `https://vidsrc.to/embed/movie/${imdbId}`,
     description: 'HD Quality',
-    type: 'embed' as const,
-  },
-  {
-    name: '2Embed',
-    url: (imdbId: string) => `https://www.2embed.cc/embed/${imdbId}`,
-    description: 'Multiple Servers',
     type: 'embed' as const,
   },
   {
@@ -159,6 +160,8 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
   const handleNextServer = () => {
     const nextIndex = (currentServerIndex + 1) % EMBED_SERVERS.length;
     setCurrentServerIndex(nextIndex);
+    setStreamError(null);
+    setIsLoadingStream(true);
   };
 
   // Generate YouTube search URL untuk trailer
