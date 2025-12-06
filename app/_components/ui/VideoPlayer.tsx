@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FiX, FiExternalLink, FiYoutube, FiPlay, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
+import { FiX, FiExternalLink, FiYoutube, FiPlay, FiAlertCircle, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
 
 interface VideoPlayerProps {
   title: string;
@@ -182,13 +182,24 @@ export default function VideoPlayer({ title, movieId, videoUrl, onClose }: Video
       <div className="relative w-full max-w-6xl bg-netflix-darkGray rounded-lg overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="bg-black/90 p-4 sm:p-6 flex items-center justify-between border-b border-gray-800">
-          <h2 className="text-white text-lg sm:text-xl md:text-2xl font-bold truncate pr-4">
-            {title}
-          </h2>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <button
+              onClick={onClose}
+              className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors flex-shrink-0 text-white"
+              aria-label="Kembali"
+              title="Kembali"
+            >
+              <FiArrowLeft size={20} />
+            </button>
+            <h2 className="text-white text-lg sm:text-xl md:text-2xl font-bold truncate">
+              {title}
+            </h2>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors flex-shrink-0 text-white"
-            aria-label="Close"
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors flex-shrink-0 text-white ml-2"
+            aria-label="Tutup"
+            title="Tutup"
           >
             <FiX size={24} />
           </button>
